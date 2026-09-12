@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Datacenter Live Simulation // 4 Real Server Stacks</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script type="module" crossorigin src="/assets/index-DhzU_v-m.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-BiPNbvoS.css">
+</head>
+<body>
+  <div id="app">
+    <!-- 3D Three.js WebGL Canvas -->
+    <div id="webgl-canvas-container"></div>
+
+    <!-- Top Navigation Bar -->
+    <header id="top-navbar">
+      <div class="brand-section">
+        <div class="brand-title">
+          <span>⚡ DC-NOC 4-CLUSTER</span>
+          <span class="brand-tag">42U EIA-310</span>
+        </div>
+        <div class="status-pill good" id="status-pill">
+          <span class="indicator-dot"></span>
+          <span id="status-text">ALL SYSTEMS NOMINAL</span>
+        </div>
+      </div>
+
+      <!-- Telemetry KPIs -->
+      <div class="kpi-deck">
+        <div class="kpi-item">
+          <span class="kpi-lbl">ROOM TEMP</span>
+          <span class="kpi-val" id="val-room-temp">19.5°C</span>
+        </div>
+        <div class="kpi-item">
+          <span class="kpi-lbl">TOTAL DRAW</span>
+          <span class="kpi-val" id="val-total-power">5.8 kW</span>
+        </div>
+        <div class="kpi-item">
+          <span class="kpi-lbl">PUE RATING</span>
+          <span class="kpi-val" id="val-pue">1.21</span>
+        </div>
+        <div class="kpi-item">
+          <span class="kpi-lbl">NETWORK FLOW</span>
+          <span class="kpi-val" id="val-net-throughput">18.4 Gbps</span>
+        </div>
+        <div class="kpi-item">
+          <span class="kpi-lbl">UPS RESERVE</span>
+          <span class="kpi-val" id="val-ups-reserve">100%</span>
+        </div>
+        <div class="kpi-item">
+          <span class="kpi-lbl">GRID MAINS</span>
+          <span class="kpi-val good" id="val-grid-status">GRID STABLE (230 VAC)</span>
+        </div>
+        <div class="kpi-item" style="border-left: 1px solid rgba(245, 158, 11, 0.3); padding-left: 10px;">
+          <span class="kpi-lbl" style="color: #fbbf24;">EMBERGRID BRIDGE</span>
+          <span class="kpi-val good" id="val-bridge-status">🟢 ACTIVE</span>
+        </div>
+        <div class="kpi-item">
+          <span class="kpi-lbl" style="color: #f97316;">WASTE HEAT</span>
+          <span class="kpi-val" id="val-waste-heat" style="color: #f97316;">92 kW</span>
+        </div>
+      </div>
+
+      <!-- View & Environmental Controls -->
+      <div class="nav-controls">
+        <select class="select-styled" id="select-camera" title="Camera Views">
+          <option value="overview">🎥 View: 3D Overview</option>
+          <option value="walk_in">🚶 View: Walk-in Eye Level</option>
+          <option value="rack_01">🖥️ Stack 01: Alpha (Gateway)</option>
+          <option value="rack_02">💽 Stack 02: Beta (Storage)</option>
+          <option value="rack_03">⚡ Stack 03: Gamma (AI GPU)</option>
+          <option value="rack_04">🌐 Stack 04: Delta (Core/UPS)</option>
+          <option value="top_down">📐 View: Top-Down NOC</option>
+          <option value="security_cctv">📹 View: Security CCTV</option>
+        </select>
+
+        <select class="select-styled" id="select-lighting" title="Datacenter Lighting Mode">
+          <option value="standard">💡 Light: Standard</option>
+          <option value="cyber">🌌 Light: Cyber Dark</option>
+          <option value="emergency">🚨 Light: Red Alert</option>
+        </select>
+
+        <button class="btn-nav" id="btn-thermal">🌡️ Thermal: OFF</button>
+        <button class="btn-nav active" id="btn-airflow">💨 Airflow: ON</button>
+        <button class="btn-nav" id="btn-sound">🔇 Sound: MUTED</button>
+      </div>
+    </header>
+
+    <!-- Left HUD Sidebar -->
+    <aside id="left-sidebar">
+      <!-- Sparklines -->
+      <div class="hud-panel">
+        <div class="panel-title">
+          <span>Real-time Telemetry</span>
+          <span style="font-size: 9px; color: var(--accent-cyan);">10 Hz TICK</span>
+        </div>
+        <div class="sparkline-row">
+          <div class="spark-box">
+            <div class="spark-lbl">CPU LOAD</div>
+            <canvas id="spark-cpu" class="spark-canvas" width="80" height="32"></canvas>
+          </div>
+          <div class="spark-box">
+            <div class="spark-lbl">AVG TEMP</div>
+            <canvas id="spark-temp" class="spark-canvas" width="80" height="32"></canvas>
+          </div>
+          <div class="spark-box">
+            <div class="spark-lbl">NETWORK</div>
+            <canvas id="spark-net" class="spark-canvas" width="80" height="32"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4 Server Stacks Overview Cards -->
+      <div class="hud-panel" style="flex: 1; display: flex; flex-direction: column;">
+        <div class="panel-title">
+          <span>Server Stacks (4 Stacks)</span>
+          <span style="font-size: 9px; color: var(--text-secondary);">CLICK TO INSPECT</span>
+        </div>
+        <div class="rack-cards-list" id="rack-cards-container">
+          <!-- Populated by UIManager -->
+        </div>
+      </div>
+    </aside>
+
+    <!-- Right Slide-out Component Inspector Drawer -->
+    <section id="inspector-drawer">
+      <div class="inspector-header">
+        <div class="inspector-title-area">
+          <h3 id="inspector-title">Stack 01 (Alpha)</h3>
+          <small id="inspector-subtitle">Edge & API Gateway • 42U Cabinet</small>
+        </div>
+        <button class="btn-close" id="btn-close-inspector" title="Close Drawer">✕</button>
+      </div>
+      <div class="inspector-body" id="inspector-body">
+        <!-- Dynamic component stats and actions -->
+      </div>
+    </section>
+
+    <!-- Bottom Chaos & Simulation Control Deck -->
+    <footer id="bottom-bar">
+      <!-- Chaos Injection Controls -->
+      <div class="chaos-deck">
+        <span class="chaos-lbl">Workload / Chaos:</span>
+        <button class="btn-chaos active" id="chaos-normal">Normal Baseline</button>
+        <button class="btn-chaos" id="chaos-traffic">⚡ Ingress Surge (DDoS)</button>
+        <button class="btn-chaos" id="chaos-disk">💽 4K Disk Stress</button>
+        <button class="btn-chaos" id="chaos-ac">🔥 AC Cooling Fail</button>
+        <button class="btn-chaos" id="chaos-blackout">⚡ Mains Blackout</button>
+      </div>
+
+      <!-- Real-time Scrolling Syslog Stream -->
+      <div class="syslog-deck" id="syslog-container">
+        <!-- Live syslog rows added dynamically -->
+      </div>
+
+      <!-- Simulation Speed Controls -->
+      <div class="speed-deck">
+        <span class="chaos-lbl">Speed:</span>
+        <button class="btn-speed" data-speed="0">⏸ Pause</button>
+        <button class="btn-speed active" data-speed="1">1x</button>
+        <button class="btn-speed" data-speed="2">2x</button>
+        <button class="btn-speed" data-speed="5">5x</button>
+      </div>
+    </footer>
+  </div>
+
+</body>
+</html>

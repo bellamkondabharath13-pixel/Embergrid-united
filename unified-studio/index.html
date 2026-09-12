@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EmberGrid AI × 3D Datacenter Co-Simulation Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #020617;
+      --card-bg: rgba(15, 23, 42, 0.85);
+      --border: rgba(51, 65, 85, 0.5);
+      --accent-amber: #f59e0b;
+      --accent-cyan: #06b6d4;
+      --accent-rose: #ef4444;
+      --accent-green: #10b981;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background: var(--bg);
+      color: #f1f5f9;
+      font-family: 'Inter', -apple-system, sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Master Top Bar */
+    header {
+      background: rgba(2, 6, 23, 0.9);
+      border-bottom: 1px solid rgba(245, 158, 11, 0.25);
+      backdrop-filter: blur(16px);
+      padding: 8px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      z-index: 100;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo-badge {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, #f59e0b, #ea580c);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
+    }
+    .brand-text h1 {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: #fff;
+    }
+    .brand-text span.sub {
+      font-size: 10px;
+      color: #94a3b8;
+      display: block;
+    }
+
+    .telemetry-bar {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 5px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(51, 65, 85, 0.5);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+    }
+    .t-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .t-lbl { color: #64748b; font-size: 9px; text-transform: uppercase; }
+    .t-val { font-weight: 700; color: #f8fafc; }
+    .t-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 700;
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .controls-deck {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn {
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: rgba(30, 41, 59, 0.6);
+      color: #cbd5e1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .btn:hover {
+      background: rgba(51, 65, 85, 0.8);
+      color: #fff;
+    }
+    .btn-chaos-ac {
+      border-color: rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
+    }
+    .btn-chaos-ac:hover {
+      background: rgba(239, 68, 68, 0.2);
+    }
+    .btn-chaos-traffic {
+      border-color: rgba(245, 158, 11, 0.4);
+      color: #fcd34d;
+    }
+    .btn-chaos-blackout {
+      border-color: rgba(217, 119, 6, 0.5);
+      color: #fef08a;
+    }
+    .btn-reset {
+      border-color: rgba(16, 185, 129, 0.4);
+      color: #6ee7b7;
+    }
+
+    .view-toggles {
+      display: flex;
+      background: rgba(15, 23, 42, 0.8);
+      border-radius: 7px;
+      padding: 2px;
+      border: 1px solid var(--border);
+    }
+    .v-btn {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .v-btn.active {
+      background: rgba(245, 158, 11, 0.2);
+      color: #fbbf24;
+    }
+
+    /* Workspace Split Screen */
+    .workspace {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      position: relative;
+    }
+    .panel {
+      flex: 1;
+      height: 100%;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      transition: flex 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .panel.collapsed {
+      display: none;
+    }
+    .divider {
+      width: 4px;
+      background: rgba(30, 41, 59, 0.6);
+      cursor: col-resize;
+      transition: background 0.2s;
+    }
+    .divider:hover {
+      background: var(--accent-amber);
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #020617;
+    }
+  </style>
+</head>
+<body>
+  <!-- Master Navigation -->
+  <header>
+    <div class="brand">
+      <div class="logo-badge">⚡</div>
+      <div class="brand-text">
+        <h1>EmberGrid AI × 3D Datacenter Co-Simulation Studio</h1>
+        <span class="sub">Closed-Loop Server Thermal Dissipation & Carnot Battery Intelligence</span>
+      </div>
+    </div>
+
+    <!-- Live Synced Telemetry Stream -->
+    <div class="telemetry-bar">
+      <div class="t-pill" id="hud-bridge-status">🟢 CLOSED-LOOP LIVE</div>
+      <div class="t-item">
+        <span class="t-lbl">Rack Avg Temp:</span>
+        <span class="t-val" id="hud-rack-temp" style="color: #38bdf8;">21.5°C</span>
+      </div>
+      <div class="t-item">
+        <span class="t-lbl">Waste Heat:</span>
+        <span class="t-val" id="hud-waste-heat" style="color: #f97316;">98 kW</span>
+      </div>
+      <div class="t-item">
+        <span class="t-lbl">Carnot Action:</span>
+        <span class="t-val" id="hud-carnot-action" style="color: #34d399;">DIRECT REUSE + STORE</span>
+      </div>
+    </div>
+
+    <!-- Quick Chaos Triggers & Views -->
+    <div class="controls-deck">
+      <button class="btn btn-chaos-traffic" id="chaos-traffic" title="Simulate DDoS & 120k req/s compute surge">
+        🔥 Traffic Surge
+      </button>
+      <button class="btn btn-chaos-ac" id="chaos-ac" title="Simulate dual CRAC cooling unit failure">
+        ❄️ CRAC Failure
+      </button>
+      <button class="btn btn-chaos-blackout" id="chaos-blackout" title="Simulate mains grid collapse">
+        ⚡ Blackout
+      </button>
+      <button class="btn btn-reset" id="chaos-normal" title="Restore nominal temperature & power">
+        🟢 Nominal
+      </button>
+
+      <div class="view-toggles">
+        <button class="v-btn active" id="v-split">Split 50/50</button>
+        <button class="v-btn" id="v-3d">3D Datacenter</button>
+        <button class="v-btn" id="v-ember">EmberGrid AI</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Workspace Split Views -->
+  <main class="workspace">
+    <!-- Left: 3D Server Room Simulator -->
+    <div class="panel" id="panel-3d">
+      <iframe
+        id="frame-datacenter"
+        src="http://localhost:5173"
+        title="3D Server Room Datacenter Simulator"
+        allow="fullscreen"
+      ></iframe>
+    </div>
+
+    <div class="divider" id="drag-divider"></div>
+
+    <!-- Right: EmberGrid AI Carnot Battery Dashboard -->
+    <div class="panel" id="panel-ember">
+      <iframe
+        id="frame-embergrid"
+        src="http://localhost:5174"
+        title="EmberGrid AI Carnot Battery Grid Intelligence"
+      ></iframe>
+    </div>
+  </main>
+
+  <script>
+    // Broadcast & Cross-Frame Telemetry Relay
+    const frameDc = document.getElementById('frame-datacenter');
+    const frameEmber = document.getElementById('frame-embergrid');
+
+    const hudRackTemp = document.getElementById('hud-rack-temp');
+    const hudWasteHeat = document.getElementById('hud-waste-heat');
+    const hudCarnotAction = document.getElementById('hud-carnot-action');
+    const hudBridgeStatus = document.getElementById('hud-bridge-status');
+
+    let broadcastChannel;
+    try {
+      broadcastChannel = new BroadcastChannel('embergrid-datacenter-bridge');
+      broadcastChannel.onmessage = (e) => {
+        handleTelemetry(e.data);
+      };
+    } catch (e) {}
+
+    // Relay messages across iframes
+    window.addEventListener('message', (e) => {
+      if (e.data && e.data.type === 'DATACENTER_TELEMETRY') {
+        handleTelemetry(e.data);
+        if (frameEmber.contentWindow) {
+          frameEmber.contentWindow.postMessage(e.data, '*');
+        }
+      } else if (e.data && e.data.type && e.data.type.startsWith('EMBERGRID_')) {
+        if (frameDc.contentWindow) {
+          frameDc.contentWindow.postMessage(e.data, '*');
+        }
+      }
+    });
+
+    function handleTelemetry(packet) {
+      if (!packet || !packet.payload) return;
+      const data = packet.payload;
+
+      if (data.avgTemp !== undefined) {
+        hudRackTemp.textContent = `${data.avgTemp.toFixed(1)}°C`;
+        if (data.gridPower === false) {
+          hudRackTemp.style.color = '#ef4444';
+          hudBridgeStatus.textContent = '⚡ BLACKOUT MICROGRID';
+          hudBridgeStatus.style.background = 'rgba(239, 68, 68, 0.25)';
+          hudBridgeStatus.style.color = '#fef08a';
+          hudCarnotAction.textContent = 'CARNOT DISCHARGING TO DC BUS';
+        } else if (data.avgTemp > 35) {
+          hudRackTemp.style.color = '#ef4444';
+          hudBridgeStatus.textContent = '🚨 THERMAL SURGE ABSORPTION';
+          hudBridgeStatus.style.background = 'rgba(239, 68, 68, 0.2)';
+          hudBridgeStatus.style.color = '#fca5a5';
+          hudCarnotAction.textContent = 'RAPID BUFFER SINK ENGAGED';
+        } else if (data.avgTemp > 28) {
+          hudRackTemp.style.color = '#fbbf24';
+          hudBridgeStatus.textContent = '📈 HIGH COMPUTE HARVEST';
+          hudBridgeStatus.style.background = 'rgba(245, 158, 11, 0.2)';
+          hudBridgeStatus.style.color = '#fcd34d';
+          hudCarnotAction.textContent = 'HIGH-GRADE HEAT ORC / STORE';
+        } else {
+          hudRackTemp.style.color = '#38bdf8';
+          hudBridgeStatus.textContent = '🟢 CLOSED-LOOP LIVE';
+          hudBridgeStatus.style.background = 'rgba(16, 185, 129, 0.15)';
+          hudBridgeStatus.style.color = '#34d399';
+          hudCarnotAction.textContent = 'DISTRICT REUSE + BALANCED';
+        }
+      }
+
+      if (data.wasteHeatKw !== undefined) {
+        hudWasteHeat.textContent = `${data.wasteHeatKw} kW`;
+      }
+    }
+
+    // Trigger Chaos buttons
+    function sendChaos(mode) {
+      const msg = {
+        type: 'EMBERGRID_TRIGGER_CHAOS',
+        mode,
+        source: 'unified-studio',
+        timestamp: Date.now()
+      };
+      if (broadcastChannel) broadcastChannel.postMessage(msg);
+      if (frameDc.contentWindow) frameDc.contentWindow.postMessage(msg, '*');
+      if (frameEmber.contentWindow) frameEmber.contentWindow.postMessage(msg, '*');
+    }
+
+    document.getElementById('chaos-traffic').addEventListener('click', () => sendChaos('traffic_spike'));
+    document.getElementById('chaos-ac').addEventListener('click', () => sendChaos('ac_failure'));
+    document.getElementById('chaos-blackout').addEventListener('click', () => sendChaos('blackout'));
+    document.getElementById('chaos-normal').addEventListener('click', () => sendChaos('normal'));
+
+    // View toggling
+    const p3d = document.getElementById('panel-3d');
+    const pEmber = document.getElementById('panel-ember');
+    const divider = document.getElementById('drag-divider');
+    const vSplit = document.getElementById('v-split');
+    const v3d = document.getElementById('v-3d');
+    const vEmber = document.getElementById('v-ember');
+
+    function setView(view) {
+      [vSplit, v3d, vEmber].forEach(b => b.classList.remove('active'));
+      if (view === 'split') {
+        p3d.classList.remove('collapsed');
+        pEmber.classList.remove('collapsed');
+        divider.style.display = 'block';
+        vSplit.classList.add('active');
+      } else if (view === '3d') {
+        p3d.classList.remove('collapsed');
+        pEmber.classList.add('collapsed');
+        divider.style.display = 'none';
+        v3d.classList.add('active');
+      } else if (view === 'ember') {
+        p3d.classList.add('collapsed');
+        pEmber.classList.remove('collapsed');
+        divider.style.display = 'none';
+        vEmber.classList.add('active');
+      }
+    }
+
+    vSplit.addEventListener('click', () => setView('split'));
+    v3d.addEventListener('click', () => setView('3d'));
+    vEmber.addEventListener('click', () => setView('ember'));
+  </script>
+</body>
+</html>
