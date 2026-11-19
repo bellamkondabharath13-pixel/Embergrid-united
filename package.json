@@ -6,6 +6,6 @@
     "build": "npm run build:sim && npm run build:ember && npm run build:studio",
     "build:sim": "cd server-room-simulator && npm install && npx vite build --base=/datacenter/ --outDir ../dist/datacenter",
     "build:ember": "cd embergrid && npm install && npx vite build --base=/embergrid/ --outDir ../dist/embergrid",
-    "build:studio": "node -e \"const fs=require('fs'); fs.copyFileSync('unified-studio/index.html', 'dist/index.html');\""
+    "build:studio": "node -e \"const fs=require('fs'); fs.mkdirSync('dist', {recursive: true}); fs.copyFileSync('unified-studio/index.html', 'dist/index.html');\""
   }
 }
